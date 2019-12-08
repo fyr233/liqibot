@@ -39,6 +39,7 @@ bool ipsearchenabled = true;
 bool onlinecompileenabled = true;
 bool setuenabled = true;
 bool asynpythonenabled = false;
+bool ijsenabled = false;
 
 string asynpythonfile = "asyn.py";
 
@@ -69,9 +70,9 @@ struct groupmsg
 };
 
 //允许的cmd命令
-vector<string> allowedcmdword = { "ping","python","ver","winmsd","tasklist","pytest.py","hath.py" };
+vector<string> allowedcmdword = { "ping","python","ver","hath.py" };
 //特批的命令
-vector<string> specialallowedcmdword = { "taskkill /F /IM python.exe","taskkill /F /IM cmd.exe","ipconfig","taskkill /F /IM cmd.exe" };
+vector<string> specialallowedcmdword = { };
 //允许的python模块
 vector<string> allowedpython = { "import math","import numpy","import numba","import scipy","import random","import requests",
 								"import hashlib","import jieba","import unidecode","import time","import sys","import sympy",
@@ -79,9 +80,9 @@ vector<string> allowedpython = { "import math","import numpy","import numba","im
 //允许的c库
 vector<string> allowedc = { "#include <stdio.h>","#include <time.h>","#include <string.h>","#include <math.h>","#include <cmath.h>" };
 //允许的管理员命令
-vector<string> allowedadminword = { "pip"};
+vector<string> allowedadminword = { "pip", "tasklist", "taskkill"};
 //管理员
-vector<int64_t> admins = { 1325275429, 915326989, 3148859519, 1242158343, 632787458, 1063260948, 819774119 };
+vector<int64_t> admins = { 1325275429, 915326989, 3148859519, 1242158343, 632787458, 1063260948, 819774119, 1053017630, 1518350122 };
 //复读概率
 vector<repeprob> repeatprobability = {};
 //随机回复内容
@@ -614,11 +615,10 @@ void Pixiv(vector<string> msgstring, int64_t fromGroup)
 	else if (msgstring.size() > 1 && Word(msgstring[1], 1) == "r18")
 	{
 		string head = "[CQ:image,file=pixivimage";
-		string end = "r18.jpg]";
 		random_device rd;   // non-deterministic generator  
 		mt19937 gen(rd());  // to seed mersenne twister.  
 		uniform_int_distribution<> dist(1, 50); // distribute results between 1 and 6 inclusive.  
-		head = head + to_string(dist(gen)) + end;
+		head = head + to_string(dist(gen)) + "r18.jpg]";
 		int64_t msgid = CQ_sendGroupMsg(ac, fromGroup, head.c_str());
 		totalsendmsg++;
 		_sleep(40000);
@@ -720,6 +720,7 @@ void AgreeApply(vector<string>msgstring, int64_t fromQQ, int a)//0group,1friend
 					CQ_setGroupAddRequestV2(ac, GroupReview[j].responseflag.c_str(), REQUEST_GROUPINVITE, REQUEST_ALLOW, "");
 					CQ_sendGroupMsg(ac, 799733244, "已同意");
 					totalsendmsg++;
+					break;
 				}
 			}
 		}
@@ -735,6 +736,7 @@ void AgreeApply(vector<string>msgstring, int64_t fromQQ, int a)//0group,1friend
 					CQ_setFriendAddRequest(ac, FriendReview[j].responseflag.c_str(), REQUEST_ALLOW, "");
 					CQ_sendGroupMsg(ac, 799733244, "已同意");
 					totalsendmsg++;
+					break;
 				}
 			}
 		}
@@ -794,6 +796,68 @@ void SendSetu(int64_t fromGroup)
 	CQ_deleteMsg(ac, msgid);
 }
 
+void RunIjs(vector<string> msgstring, int64_t fromGroup, int64_t fromQQ)
+{
+	string expr = "";
+	if (Word(msgstring[0], 1) == "ijs")
+	{
+		if (Word(msgstring[0], 2) != "")
+		{
+			if (Word(msgstring[0], 2) == "new")
+			{
+				CQ_sendGroupMsg(ac, fromGroup, exec("pythonw jsclient.py new " + to_string(fromQQ), fromGroup).c_str());
+			}
+			else if (Word(msgstring[0], 2) == "del")
+			{
+				CQ_sendGroupMsg(ac, fromGroup, exec("pythonw jsclient.py del " + to_string(fromQQ), fromGroup).c_str());
+			}
+			else
+			{
+				CQ_sendGroupMsg(ac, fromGroup, "syntax error");
+			}
+		}
+		else
+		{
+			if (msgstring.size() > 1)
+				for (int i = 1; i < msgstring.size(); i++)
+				{
+					expr += msgstring[i] + '\n';
+				}
+			expr = Replace(expr, vector<string>({ "\"", "\n"}), vector<string>({ "\\\"", " "}));
+			CQ_sendGroupMsg(ac, fromGroup, exec("pythonw jsclient.py eval " + to_string(fromQQ) + " " + expr, fromGroup).c_str());
+		}
+	}
+	else if (Word(msgstring[0], 1) == "ijsg")
+	{
+		if (Word(msgstring[0], 2) != "")
+		{
+			if (Word(msgstring[0], 2) == "new")
+			{
+				CQ_sendGroupMsg(ac, fromGroup, exec("pythonw jsclient.py new g" + to_string(fromGroup), fromGroup).c_str());
+			}
+			else if (Word(msgstring[0], 2) == "del")
+			{
+				CQ_sendGroupMsg(ac, fromGroup, exec("pythonw jsclient.py del g" + to_string(fromGroup), fromGroup).c_str());
+			}
+			else
+			{
+				CQ_sendGroupMsg(ac, fromGroup, "syntax error");
+			}
+		}
+		else
+		{
+			if (msgstring.size() > 1)
+				for (int i = 1; i < msgstring.size(); i++)
+				{
+					expr += msgstring[i] + '\n';
+				}
+			expr = Replace(expr, vector<string>({ "\"", "\n" }), vector<string>({ "\\\"", " " }));
+			CQ_sendGroupMsg(ac, fromGroup, exec("pythonw jsclient.py eval g" + to_string(fromGroup) + " " + expr, fromGroup).c_str());
+		}
+	}
+	totalsendmsg++;
+}
+
 void AdminSetting(vector<string> msgstring, int64_t fromGroup, int64_t fromQQ)
 {
 	bool issuadmin = fromQQ == 1325275429;
@@ -839,6 +903,10 @@ void AdminSetting(vector<string> msgstring, int64_t fromGroup, int64_t fromQQ)
 			asynpythonenabled = true;
 		else if (msgstring[i] == "asynpython off")
 			asynpythonenabled = false;
+		else if (msgstring[i] == "ijs on")
+			ijsenabled = true;
+		else if (msgstring[i] == "ijs off")
+			ijsenabled = false;
 		else if (Word(msgstring[i], 1) == "repeatprob")
 		{
 			repeprob a = { stoi(Word(msgstring[i], 2)), stoi(Word(msgstring[i], 3)) };
@@ -913,7 +981,7 @@ int SearchRepeatProbability(int64_t fromQQ)
 
 void PrintInfo(int64_t fromGroup)
 {
-	CQ_sendGroupMsg(ac, fromGroup, "可编程复读智障机器人\nv2.0\n感谢赵爷、马神、羊绒、董姐姐赞助");
+	CQ_sendGroupMsg(ac, fromGroup, "可编程复读智障机器人\nv3.0\n感谢赵爷、马神、羊绒、董姐姐赞助");
 	totalsendmsg++;
 }
 
@@ -1188,11 +1256,11 @@ CQEVENT(int32_t, __eventGroupMsg, 36)(int32_t subType, int32_t msgId, int64_t fr
 	{
 		Ifly(msgstring, fromGroup);
 	}
-	else if (msgstring[0] == "啊！！")
+	/*else if (msgstring[0] == "啊！！")
 	{
 		BrotherSound(fromGroup);
 		return EVENT_BLOCK;
-	}
+	}*/
 	else if (msgstring[0] == "info")
 	{
 		PrintInfo(fromGroup);
@@ -1571,6 +1639,10 @@ CQEVENT(int32_t, __eventGroupMsg, 36)(int32_t subType, int32_t msgId, int64_t fr
 	{
 		SendSetu(fromGroup);
 	}
+	else if ((Word(msgstring[0], 1) == "ijs" || Word(msgstring[0], 1) == "ijsg") && ijsenabled)
+	{
+		RunIjs(msgstring, fromGroup, fromQQ);
+	}
 	else if (msgstring[0] == "help" || msgstring[0] == "/?")
 	{
 		CQ_sendGroupMsg(ac, fromGroup, "47.94.255.161:1920");
@@ -1703,7 +1775,7 @@ CQEVENT(int32_t, __eventFriend_Add, 16)(int32_t subType, int32_t sendTime, int64
 CQEVENT(int32_t, __eventRequest_AddFriend, 24)(int32_t subType, int32_t sendTime, int64_t fromQQ, const char *msg, const char *responseFlag) {
 
 	//CQ_setFriendAddRequest(ac, responseFlag, REQUEST_ALLOW, "");
-	CQ_sendGroupMsg(ac, 799733244, ("好友申请" + to_string(fromQQ)).c_str());
+	CQ_sendGroupMsg(ac, 799733244, ("好友申请" + to_string(fromQQ) + "\n" + msg).c_str());
 	totalsendmsg++;
 
 	FriendReview.push_back({ fromQQ, responseFlag });
@@ -1725,7 +1797,7 @@ CQEVENT(int32_t, __eventRequest_AddGroup, 32)(int32_t subType, int32_t sendTime,
 	//} else 
 	if (subType == 2) {
 		//CQ_setGroupAddRequestV2(ac, responseFlag, REQUEST_GROUPINVITE, REQUEST_ALLOW, "");
-		CQ_sendGroupMsg(ac, 799733244, ("加群申请"+to_string(fromGroup)).c_str());
+		CQ_sendGroupMsg(ac, 799733244, ("加群申请" + to_string(fromGroup) + "\n" + msg).c_str());
 		totalsendmsg++;
 
 		GroupReview.push_back({ fromGroup, responseFlag });
