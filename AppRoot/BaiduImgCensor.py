@@ -24,29 +24,66 @@ censor_SECRET_KEY = 'r0rtrpRj8eHRnkPCfEhjOPRh2eO997Uv'
 #classify_SECRET_KEY = 'LcClAOmKwGSIXR2st8ishMXUPXkiLaaI'
 
 censor_client = AipImageCensor(censor_APP_ID, censor_API_KEY, censor_SECRET_KEY)
-censor_result = censor_client.imageCensorUserDefined(imgurl)
+censor_result = censor_client.antiPorn(downloadImg(imgurl))
 
 print(censor_result)
-if 'data' in censor_result:
-    for each in censor_result['data']:
+if 'result_fine' in censor_result:
+    for each in censor_result['result_fine']:
         #print('type', each['type'], 'prob', each['probability'])
-        if each['type']==1 and each['msg']=='存在一般色情不合规' and each['probability']>0.9:
-            saveImg(imgurl)
+        if each['class_name']=='一般色情' and each['probability']>0.9:
             print('色图！', end='')
-            break
-        elif each['type']==1 and each['msg']=='存在卡通色情不合规' and each['probability']>0.5:
             saveImg(imgurl)
-            print('色图！', end='')
             break
-        elif each['type']==1 and each['msg']=='存在卡通女性性感不合规' and each['probability']>0.4:
+        elif each['class_name']=='卡通色情' and each['probability']>0.55:
+            print('色图！', end='')
             saveImg(imgurl)
-            print('色图！', end='')
             break
-        elif each['type']==1 and each['msg']=='存在女性性感不合规' and each['probability']>0.85:
+        elif each['class_name']=='SM' and each['probability']>0.65:
+            print('色图！', end='')
             saveImg(imgurl)
-            print('色图！', end='')
             break
-        if each['type']==2 and each['probability']>0.9:#性感
+        elif each['class_name']=='艺术品色情' and each['probability']>0.9:
+            print('色图！', end='')
             saveImg(imgurl)
-            print('色图！', end='')
             break
+        elif each['class_name']=='儿童裸露' and each['probability']>0.9:
+            print('色图！', end='')
+            saveImg(imgurl)
+            break
+        elif each['class_name']=='低俗' and each['probability']>0.85:
+            print('色图！', end='')
+            saveImg(imgurl)
+            break
+        elif each['class_name']=='性玩具' and each['probability']>0.7:
+            print('色图！', end='')
+            saveImg(imgurl)
+            break
+        elif each['class_name']=='女性性感' and each['probability']>0.85:
+            print('色图！', end='')
+            saveImg(imgurl)
+            break
+        elif each['class_name']=='卡通女性性感' and each['probability']>0.65:
+            print('色图！', end='')
+            saveImg(imgurl)
+            break
+        elif each['class_name']=='男性性感' and each['probability']>0.95:
+            print('色图！', end='')
+            saveImg(imgurl)
+            break
+        elif each['class_name']=='自然男性裸露' and each['probability']>0.95:
+            print('色图！', end='')
+            saveImg(imgurl)
+            break
+        elif each['class_name']=='亲密行为' and each['probability']>0.90:
+            print('色图！', end='')
+            saveImg(imgurl)
+            break
+        elif each['class_name']=='卡通亲密行为' and each['probability']>0.65:
+            print('色图！', end='')
+            saveImg(imgurl)
+            break
+        elif each['class_name']=='特 殊类' and each['probability']>0.95:
+            print('色图！', end='')
+            saveImg(imgurl)
+            break
+        
