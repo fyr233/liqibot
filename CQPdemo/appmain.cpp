@@ -443,7 +443,7 @@ void SavePython(vector<string> msgstring, int64_t fromGroup, int64_t fromQQ)
 	}
 	ofstream outpyfile;
 	outpyfile.open(("pythoncode\\" + filename).c_str());
-	outpyfile.imbue(locale("", locale::all ^ locale::numeric));
+	//outpyfile.imbue(locale("", locale::all ^ locale::numeric));
 	outpyfile << PythonContent;
 	outpyfile.close();
 
@@ -553,7 +553,7 @@ void Ifly(vector<string> msgstring, int64_t fromGroup)
 	}
 	else
 	{
-		_sleep(20);
+		Sleep(100);
 		CQ_sendGroupMsg(ac, fromGroup, "[CQ:record,file=iflytexttosound.wav]");
 		totalsendmsg++;
 	}
@@ -587,7 +587,7 @@ void Pixiv(vector<string> msgstring, int64_t fromGroup)
 		head = head + a + end;
 		int64_t msgid = CQ_sendGroupMsg(ac, fromGroup, head.c_str());
 		totalsendmsg++;
-		_sleep(40000);
+		Sleep(40000);
 		CQ_deleteMsg(ac, msgid);
 	}
 	else if (msgstring.size() > 1 && Word( msgstring[1], 1) == "refresh")
@@ -621,7 +621,7 @@ void Pixiv(vector<string> msgstring, int64_t fromGroup)
 		head = head + to_string(dist(gen)) + "r18.jpg]";
 		int64_t msgid = CQ_sendGroupMsg(ac, fromGroup, head.c_str());
 		totalsendmsg++;
-		_sleep(40000);
+		Sleep(40000);
 		CQ_deleteMsg(ac, msgid);
 	}
 	else
@@ -746,53 +746,55 @@ void AgreeApply(vector<string>msgstring, int64_t fromQQ, int a)//0group,1friend
 
 void CheckSetu(string msgstring0, int64_t fromGroup)
 {
-	for (int i = 0 ; i < msgstring0.size(); i++)
+	regex CQimg("[CQ:image,file=(.*?)]");
+	sregex_iterator words_begin(msgstring0.begin(), msgstring0.end(), CQimg);
+	sregex_iterator words_end;
+
+	for (auto i = words_begin; i != words_end; i++)
 	{
-		if (msgstring0[i] == ']')
+		string file = (*i).str();
+
+		//[CQ:image,file=(****.jpg)]
+		string filetype = file.substr(msgstring0.size() - 4, 4);//".jpg"/".png"
+		string filepath = "data/image/" + file + ".cqimg";
+		string s;
+		ifstream infile;
+		infile.open(filepath.c_str());
+		if (!infile.is_open())
+			return;
+		infile >> s; infile >> s;
+		string md5 = s.substr(4);
+		infile >> s;
+		int width = stoi(s.substr(6));
+		infile >> s;
+		int height = stoi(s.substr(7));
+		infile >> s;
+		int size = stoi(s.substr(5));
+		infile >> s;
+		string url = s.substr(4);
+		infile.close();
+
+		//CQ_sendGroupMsg(ac, 799733244, (md5+"\n"+to_string(size)+"\n"+url).c_str());
+
+		if ((filetype != ".jpg" && filetype != ".png") || size < 50000 || size > 7000000)
+			return;
+
+		CQ_addLog(ac, CQLOG_DEBUG, "É«Í¼¼ì²â", (md5 + "\n" + to_string(size) + "\n" + url).c_str());
+		string ans = exec("pythonw BaiduImgCensor.py \"" + url + "\" " + md5 + filetype, fromGroup);
+		if (ans.size() > 0)
 		{
-			msgstring0 = msgstring0.substr(0, i + 1);
-			break;
-		}	
+			CQ_sendGroupMsg(ac, fromGroup, ans.c_str());
+			totalsendmsg++;
+		}
 	}
-	//[CQ:image,file=****.jpg]
-	string filetype = msgstring0.substr(msgstring0.size() - 5, 4);//".jpg"/".png"
-	string filepath = "data/image/" + msgstring0.substr(15, msgstring0.size() - 16) + ".cqimg";
-	string s;
-	ifstream infile;
-	infile.open(filepath.c_str());
-	if (!infile.is_open())
-		return;
-	infile >> s; infile >> s;
-	string md5 = s.substr(4);
-	infile >> s;
-	int width = stoi(s.substr(6));
-	infile >> s;
-	int height = stoi(s.substr(7));
-	infile >> s;
-	int size = stoi(s.substr(5));
-	infile >> s;
-	string url = s.substr(4);
-	infile.close();
-
-	//CQ_sendGroupMsg(ac, 799733244, (md5+"\n"+to_string(size)+"\n"+url).c_str());
-
-	if ((filetype!=".jpg" && filetype!=".png") || size < 10000 || size > 5000000)
-		return;
-
-	CQ_addLog(ac, CQLOG_DEBUG, "É«Í¼¼ì²â", (md5 + "\n" + to_string(size) + "\n" + url).c_str());
-	string ans = exec("pythonw BaiduImgCensor.py \"" + url + "\" " + md5 + filetype, fromGroup);
-	if (ans.size() > 0)
-	{
-		CQ_sendGroupMsg(ac, fromGroup, ans.c_str());
-		totalsendmsg++;
-	}
+	
 }
 
 void SendSetu(int64_t fromGroup)
 {
 	int64_t msgid = CQ_sendGroupMsg(ac, fromGroup, exec("pythonw SelectSetu.py", fromGroup).c_str());
 	totalsendmsg++;
-	_sleep(20000);
+	Sleep(20000);
 	CQ_deleteMsg(ac, msgid);
 }
 
@@ -966,6 +968,11 @@ void AdminSetting(vector<string> msgstring, int64_t fromGroup, int64_t fromQQ)
 			if (Word(msgstring[i], 2) != "")
 				asynpythonfile = Word(msgstring[i], 2);
 		}
+		else
+		{
+		CQ_sendGroupMsg(ac, fromGroup, "Î´ÖªµÄÃüÁî");
+		totalsendmsg++;
+		}
 	}
 	CQ_sendGroupMsg(ac, fromGroup, "Ã»ÓÐ±ÀÀ££¬ÕæºÃ");
 	totalsendmsg++;
@@ -1023,7 +1030,7 @@ DWORD WINAPI SayTime(LPVOID pM)
 		}
 		else if (info->tm_min != 0)
 			o = true;
-		_sleep(1000);
+		Sleep(1000);
 	}
 	return 0;
 }
@@ -1694,7 +1701,7 @@ CQEVENT(int32_t, __eventGroupMsg, 36)(int32_t subType, int32_t msgId, int64_t fr
 		int a = dist(gen);
 		if (a < SearchRepeatProbability(fromQQ))
 		{
-			_sleep(300);
+			Sleep(300);
 			CQ_sendGroupMsg(ac, fromGroup, msg);
 			totalsendmsg++;
 			//return EVENT_BLOCK; //¸´¶Á
@@ -1702,7 +1709,7 @@ CQEVENT(int32_t, __eventGroupMsg, 36)(int32_t subType, int32_t msgId, int64_t fr
 		a = dist(gen);
 		if (a < 5)
 		{
-			_sleep(600);
+			Sleep(600);
 			CQ_sendGroupMsg(ac, fromGroup, RandomReply().c_str());
 			totalsendmsg++;
 		}

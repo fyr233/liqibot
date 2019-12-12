@@ -43,10 +43,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Users\fyr\Documents\GitHub\liqibot\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Users\ADD\Documents\GitHub\liqibot\include;$(WindowsSDK_IncludePath);D:\Documents\Visual Studio 2017\Projects\CQPrepeat\include;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\fyr\Documents\GitHub\liqibot\include;$(WindowsSDK_IncludePath);D:\Documents\Visual Studio 2017\Projects\CQPrepeat\include;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
